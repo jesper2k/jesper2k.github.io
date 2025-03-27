@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>Money</title>
+		<meta charset="utf-8">
+        <link rel="icon" href="coin.png">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Open+Sans">
+	</head>
+
+	<body>
+        <h1><span id="main-title">My thoughts on investing money</span></h1>
+        <br>
+        <p>
+            Investing can be a very easy way of making money without putting in a lot of work, relative to your standard job.
+            However, it can lead to losses if you're unlucky or make a big mistake.
+        </p>
+        <p>
+            These are my thoughts on investing based on cool math and statistics, and what i think is useful to know when doing it.<br>
+        </p>
+            <br>
+            <div class="block danger">
+                <p class="block-title">DISCLAIMER</p>
+                This is not financial advice or whatever, your decisions are your responsibility.
+                I have no idea how the stock market works, i just watch lines go up or down and make decisions based on their history.
+                These are only my thoughts based on math and stuff. Don't sue me for your own dumb decisions.
+            </div>
+            <br>
+        </p>
+
+        <p>These examples are based on <a href="https://www.youtube.com/watch?v=vBX-KulgJ1o" target="_blank">this video</a> by Veritasium</p>
+        <br>
+
+        <h3>Expected value</h3>
+        <p>
+            This is an example of how i think about betting money, and it's very useful for understanding the risks and rewards of making investments.<br>
+            <br>
+            Let's say i make a bet with you. I will toss a perfect coin with a 50% chance of landing on a either it's green or red face.
+            If it lands on red (red facing up) you give me $10, and if it lands on green (green facing up) i give you $15, $5 more than i have to pay if i win the bet.<br>
+            <br>
+            Do you take the bet? Why or why not?<br>
+            <br>
+            Your first intutive thought may be "well there's a 50% chance that i lose $10, and while i could make $15, i'm not willing to take that risk".<br>
+            <br>
+            Now let's do the math:<br>
+            50% of the times i do this bet, you'll win $15<br>
+            the other 50%, you lose $10<br>
+            
+            <div class="block math">
+                Expected value:<br>
+                <code>$15 * 50% - $10 * 50%<br>
+                    = + $2.5</code><br><br>
+                So on average, you'd be up $2.5
+            </div>
+            
+            Now if you had $1000 you could take this bet without any significant risk, because you could only lose 1% of what you have, and on average you'll make money doing the bet.<br>
+            <br>
+        </p>
+
+        <h3>Risk</h3>
+        <p>
+            Now let's change the bet to my reward being $1000$ and your reward being $1500.
+            While sure, you would on average win $250, you also have a 50% chance of losing everything you own.
+            That's a huge risk, and it's not a very good bet in this situation.<br>
+            <br>
+        </p>
+
+        <h3>Repeated bets</h3>
+        <p>
+            Here's my last bet; it's the same as the first $15/$10 one, but you have to do it 100 times.
+            You can simulate this by clicking the button, and you can click it several times to see what you usually win or lose.<br><br>
+            &nbsp; &nbsp; <button id="bet_button">Bet!</button> &nbsp; &nbsp; Your reward: <span id="bet_result">_____</span><br><br>
+            The total expected value for 100 bets would be 100 * $2.5 = $250.
+            You'll probably have to click the button a few times to even see a losing bet.
+            Most (~96.5%) of the time, you'll win 40 to 60 of the bets.
+            If you win fewer than 40 of the bets (~1.75%), you lose money, but if you win more than 60 of them (also ~1.75%), you win more than 500$.
+            While you could thoretically lose every single bet and lose all your $1000, it's astronomically unlikely.
+            <br><br>
+        </p>
+
+        <h3>Conclusion</h3>
+        <p>
+            But who cares? why am i telling you this?<br><br>
+            Because it relates to how you can strategically invest your own money to minimize your risk of losing it while still making a reasonable gain.
+            Even though all of these bets have the same win/loss value of 1.5 to 1, they show how you can strategically come out of the bet with a profit without taking much risk.<br><br>
+            Making repeated bets is mostly analogous to investing in different independent things. Although, in reality this isn't quite the case, as a lot of stocks move similarly from day to day.
+            Also, making the largest gain will come at the cost of the largest risk of losing it all.
+        </p>
+        <br><br>
+        That's it for now!
+        I might add some more stuff here later about things like:
+        <ul>
+            <li>inflation</li>
+            <li>investing over time</li>
+            <li>How to (mostly) avoid paying taxes on your gains</li>
+        </ul>
+
+        <p id="funny_target">
+            However, a much better video explaining these concepts is <a id="funny" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank">this video</a>.
+        </p>
+
+        <script src="script.js"></script>
+	</body>
+</html>
