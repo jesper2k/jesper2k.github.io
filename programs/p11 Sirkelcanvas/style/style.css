@@ -1,0 +1,21 @@
+
+ul li {
+  display: inline;
+  text-decoration: none;
+}
+
+#tegneflate {
+  position: absolute;
+  left: 10px;
+  top: 100px;
+  border: solid;
+}
+
+#tykkelse {
+  width: 50px;
+}
+
+#btnTheme2:hover {
+  background-color: #f000f0;
+  border: 2px outset #d0d0d0;
+}
