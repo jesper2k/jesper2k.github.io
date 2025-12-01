@@ -46,7 +46,7 @@ var programs = [
     { name: "Minesweeper", pathName: "p120 minesweeper" },
     { name: "Lunar plants", pathName: "p131 lunar plants" },
     { name: "A* pathfinding", pathName: "p135 a star pathfinding" },
-    { name: "Solar system", pathName: "p164 solar system" },
+    { name: "Solar system", pathName: "p164 Solar System" },
 ]
 
 // Please god do not look at this
