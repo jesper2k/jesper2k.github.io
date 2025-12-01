@@ -127,7 +127,7 @@ drawText("test", -100, -100);
 drawBackground();
 
 
-var gridSize = 1;
+var gridSize = 10;
 var gridWidth, gridHeight;
 gridWidth = parseInt(Width/gridSize);
 gridHeight = parseInt(Height/gridSize);
@@ -146,7 +146,7 @@ for (var x = 0; x < gridWidth; x++) {
 
 var buffer = 5;
 
-var numFoods = 100000;
+var numFoods = 100;
 var foods = [];
 
 function Food() {
@@ -169,7 +169,7 @@ var snek = {
   body: [],
   automatic: false,
   direction: 0,
-  speed: 60,
+  speed: 10,
   length: 10,
   points: 0,
   ded: false,
