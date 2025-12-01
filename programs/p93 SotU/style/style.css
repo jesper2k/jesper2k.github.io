@@ -1,0 +1,20 @@
+
+html, body {
+  width:  100%;
+  height: 100%;
+  margin: 0px;
+}
+
+body {
+  overflow: hidden;
+}
+
+#canvas, #canvasGUI {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+#canvasGUI {
+  z-index: 1;
+}
