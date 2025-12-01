@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>whao</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+
+	<body>
+
+        <div id="dashboard">
+            <div class="flex-container">
+                <button id="btnHalfSpeed">0.5x</button>
+                <button id="btnSimSpeed">Sim speed:</button>
+                <button id="btnDoubleSpeed">2x</button>
+            </div>
+            <div class="flex-container">
+                <button id="btnToggleForceVectors">Force vectors:</button></td>
+            </div>
+            <div class="flex-container">
+                <button id="btnToggleGridlines">Gridlines:</button></td>
+            </div>
+            <div class="flex-container">
+                <button id="btnAddObject">Add object</button></td>
+            </div>
+            <br>
+            <div class="info">
+                Selected object: <span id="selectedObject">none</span>
+            </div>
+            <div class="flex-container">
+                <button id="btnFollow">Follow</button></td>
+            </div>
+            <br>
+            
+        </div>
+        
+        <canvas id="canvas"></canvas>
+        <script src="script.js"></script>
+	</body>
+</html>
