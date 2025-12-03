@@ -51,6 +51,11 @@ button:active {
     top: 10px;
     left: 10px;
     z-index: 10;
+    pointer-events: none;
+}
+
+#dashboard * * {
+    pointer-events: auto;
 }
 
 .flex-container {
@@ -63,6 +68,6 @@ button:active {
     font-family: 'Gill Sans MT', Calibri;
 }
 
-#btnFollow {
+#btnFollow, #selectionInfo {
     display: none;
 }

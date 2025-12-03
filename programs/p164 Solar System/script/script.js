@@ -1,7 +1,81 @@
 
+// Use [ctrl] + [F] "===" to navigate to different parts
+
+// Physics part:    Math and physics architecture, and planet initialization
+// UI part:         Interaction handling
+
+
+const FPS = 144
+const interactionRadius = 0.1 // Cursor-circle size
+const zoomAmount = 1.2 // Increase to speed up zooming
+const maxScale = 10 // Zoom-in limit
+const minScale = 0.001 // Zoom-out limit
+const backgroundColor = "rgb(10, 10, 30)"
+
+const vectorSize = 0.5 // For vector arrowhead and thickness
+const vectorLength = 10 // For vector length
+const minForceVectorLength = 0.0
+const maxForceVectorLength = 1.0
+
+// Don't touch these, or you'll break the universe
+const tau = 2 * Math.PI;
+const G = 1 / 1e6
+const c = get("canvas").getContext("2d");
+
+
+
+var Width = window.innerWidth;
+var Height = window.innerHeight;
+
+var frame = 0 // Simulation ticks
+var time = 0 // Real time, in seconds
+var simulationSpeed = 1 // Initial simulation speed multiplier
+
+var simulationPaused = false
+var forceVectorsEnabled = false
+
+var gridLinesEnabled = false
+
+var mouseDown = false
+var draggingEnabled = true
+
+var mouseDownPos = {
+    x: null,
+    y: null
+}
+var prevMousePos = {
+    x: null,
+    y: null
+}
+var mousePos = {
+    x: null,
+    y: null
+}
+
+
+
+var view = {
+    scale: 1.0, // 1/zoom
+    position: {
+        x: 0,
+        y: 0,
+    },
+}
+
+var cameraPosition = {
+    x: 0,
+    y: 0,
+}
+
+var selectedObject = "none";
+var followingObject = "none";
+var objectsAdded = 0
+
+var addingObject = false
+var gridSize = 100
+var gridRadius = 10
+
 // ======== PHYSICS PART ========
-var G = 0.000001
-var simulationSpeed = 1
 
 function getMagnitude(x, y) {
     return Math.sqrt(x*x + y*y)
@@ -40,22 +114,27 @@ class PhysicsObject {
         this.trail = []
     }
 
-    draw() {
+    drawBody() {
+        // Drawing planets with shadows, except for the sun
+        drawCircle(this.position.x, this.position.y, this.radius, false, this.color, (this.name != "Sol"))
+    }
 
+    drawTrail() {
         if (this.trail.length == 0) {
             return
         } else {
+            // Trail settings
             c.beginPath()
             c.miterLimit = 3
             c.strokeStyle = this.color
             c.lineWidth = 0.1
-            c.moveTo(this.trail[0].x, this.trail[0].y)
-
-            for (let i = 1; i < this.trail.length; i++) {
+            
+            // Drawing the trail
+            c.moveTo(this.position.x, this.position.y)
+            for (let i = 0; i < this.trail.length; i++) {
                 c.lineTo(this.trail[i].x, this.trail[i].y)
             }
             c.stroke()
-            drawCircle(this.trail[0].x, this.trail[0].y, this.radius, false, this.color, (this.name != "Sol"))
         }
     }
     
@@ -119,46 +198,62 @@ class PhysicsObject {
         var ax = a * Math.cos(angle)
         var ay = a * Math.sin(angle)
 
-        this.force.x += ax
-        this.force.y += ay
-
         // Gravity formula
         this.boost(ax, ay)
     }
 
+    // Actually an acceleration vector
     drawForceVector() {    
         drawVector(
             this.position.x, 
             this.position.y,
-            Math.min(this.force.magnitude*10 + 0.0005, 0.0015),
+            Math.min(Math.max(this.force.magnitude*10, minForceVectorLength), maxForceVectorLength),
             this.force.angle,
             "rgb(250, 30, 0)"
         )
     }
     
     boost(x, y) {
+        // A 1-frame acceleration
         this.speed.x += x
         this.speed.y += y
 
-        this.force.x += x // Temporary, only for this frame
+        this.force.x += x
         this.force.y += y
     }
 }
 
 
-
+/*
+Sol = new PhysicsObject(
+    name = "Sol",                           // Name, identical to object identifier
+    position = new Point(0, 0.0),           // Position x and y in grid units
+    speed = new Point(0, 0.000004),         // Initial speed in units per frame
+    mass = 1000,                            // Mass in earth masses
+    radius = 1,                             // Radius (not diameter) in grid units
+    color = "rgba(224, 217, 0, 1)",       // Sunlit color
+),
+*/
 
 // Massive objects
-var physicsObjects = [
-    Sol = new PhysicsObject(
-        name = "Sol",
-        position = new Point(0, 0.0),
-        speed = new Point(0, 0.000004),
-        mass = 1000,
-        radius = 1,
-        color = "rgba(224, 217, 0, 1)",
-    ),
+const physicsObjects = [
 
+    Sol2 = new PhysicsObject(
+        name = "Sol 2",                           // Name, identical to object identifier
+        position = new Point(-1, 0),           // Position x and y in grid units
+        speed = new Point(0.00005, -0.013),         // Initial speed in units per frame
+        mass = 400,                            // Mass in earth masses
+        radius = 0.35,                             // Radius (not diameter) in grid units
+        color = "rgba(224, 168, 0, 1)",       // Sunlit color
+    ),
+    Sol = new PhysicsObject(
+        name = "Sol",                           // Name, identical to object identifier
+        position = new Point(1, 0),           // Position x and y in grid units
+        speed = new Point(0.00005, 0.00865),         // Initial speed in units per frame
+        mass = 600,                            // Mass in earth masses
+        radius = 0.5,                             // Radius (not diameter) in grid units
+        color = "rgba(224, 209, 0, 1)",       // Sunlit color
+    ),
 
     Mercury = new PhysicsObject(
         name = "Mercury",
@@ -269,7 +364,7 @@ var physicsObjects = [
     ),
 
     Voyager_3 = new PhysicsObject(
-        name = "Voyager_3",
+        name = "Voyager 3",
         position = new Point(-20, -0.4959),
         speed = new Point(0.0, -0.01),
         mass = 0,
@@ -280,17 +375,12 @@ var physicsObjects = [
 ]
 
 
-// ======== MAIN PART ========
-const tau = 2 * Math.PI;
-const FPS = 144
+// ======== UI PART ========
 
 function get(selector) {
     return document.getElementById(selector);
 }
 
-var c = get("canvas").getContext("2d");
-var Width = window.innerWidth;
-var Height = window.innerHeight;
 get("canvas").width = Width;
 get("canvas").height = Height;
 
@@ -313,31 +403,33 @@ function colorToRGB(color, shiftR = 0, shiftG = 0, shiftB = 0) {
 }
 
 function drawBackground() {
-    c.fillStyle = "rgb(10, 10, 30)"
+    c.fillStyle = backgroundColor
     c.fillRect(-Width, -Height, Width*2, Height*2);
 }
 
 
-get("canvas").addEventListener("wheel", function(event) {
-    if (event.deltaY < 0) {
-        view.scale *= zoomAmount
+get("canvas").addEventListener("wheel", function (event) {
 
+    if (event.deltaY < 0) {
+        // Zooming in
+        view.scale *= zoomAmount
+        view.scale = Math.min(view.scale, maxScale)
+        if (view.scale >= maxScale) {return}
+        
         view.position.x -= (event.clientX - Width/2) / view.scale * (zoomAmount-1)
         view.position.y -= (event.clientY - Height/2) / view.scale * (zoomAmount-1)
         
     } else if (event.deltaY > 0) {
+        // Zooming out
         view.scale /= zoomAmount
+        view.scale = Math.max(view.scale, minScale)
+        if (view.scale <= minScale) {return}
         
         view.position.x += (event.clientX - Width/2) / view.scale * (1/(1/(zoomAmount-1)+1))
         view.position.y += (event.clientY - Height/2) / view.scale * (1/(1/(zoomAmount-1)+1))
     }
 })
 
-
-// ----------- Dashboard buttons interaction ----------- 
-var simulationPaused = false
-var forceVectorsEnabled = false
-var gridLinesEnabled = false
 
 // Simulation speed buttons
 get("btnHalfSpeed").addEventListener("mouseup", function(event) {
@@ -364,7 +456,7 @@ updateBtnText()
 
 
 
-// Force vector toggle logic
+// Force vector toggle controls
 get("btnToggleForceVectors").addEventListener("click", function(event) {
     forceVectorsEnabled = !forceVectorsEnabled
     updateVectorBtnText()
@@ -391,21 +483,6 @@ function updateGridlinesBtnText() {
 updateGridlinesBtnText()
 
 
-var mouseDown = false
-var draggingEnabled = true
-
-var mouseDownPos = {
-    x: null,
-    y: null
-}
-var prevMousePos = {
-    x: null,
-    y: null
-}
-var mousePos = {
-    x: null,
-    y: null
-}
 
 get("canvas").addEventListener("mousedown", function(event) {
     mouseDown = true
@@ -442,32 +519,13 @@ function mousemove(event) {
     }
 }
 
-var zoomAmount = 1.2
-var view = {
-    scale: 1.0, // aka zoom
-    position: {
-        x: 0,
-        y: 0,
-    },
-}
-var cameraPosition = {
-    x: 0,
-    y: 0,
-}
-
-
-// Selected object text
-var interactionRadius = 0.1
-var selectedObject = "none";
-var followingObject = "none";
-var objectsAdded = 0
 
 
 get("btnFollow").addEventListener("click", function (event) {
     if (selectedObject != "none" && (selectedObject != followingObject)) {
         // Starting to follow
         view.position = { x: 0, y: 0 } // Resetting pan
-        view.scale = Math.max(0.2/getObjectByName(selectedObject).radius, 0.3)
+        view.scale = Math.max(0.2 / getObjectByName(selectedObject).radius, 0.3)
         followObject(selectedObject)
     } else {
         unfollowObject()
@@ -476,9 +534,14 @@ get("btnFollow").addEventListener("click", function (event) {
 
 
 function selectObject(physicsObject) {
+    console.log("selecing " + physicsObject);
+    
     selectedObject = physicsObject
-    get("selectedObject").innerHTML = selectedObject
+    var objectInfo = getObjectByName(selectedObject)
+    get("selectedObject").innerHTML = objectInfo.name
     get("btnFollow").style.display = "block"
+    get("selectionInfo").style.display = "block"
+
     if (selectedObject != "none" && (selectedObject != followingObject)) {
         get("btnFollow").innerHTML = "Follow"
     }
@@ -488,12 +551,16 @@ function unselectObject() {
     get("selectedObject").innerHTML = "none"
     if (followingObject == "none") {
         get("btnFollow").style.display = "none"
+    } else {
+        get("btnFollow").innerHTML = "Unfollow"
     }
+    get("selectionInfo").style.display = "none"
     selectedObject = "none"
 }
 
 function followObject(physicsObject) {
     followingObject = physicsObject
+    lookAt(followingObject)
     get("btnFollow").innerHTML = "Unfollow"
 }
 
@@ -508,7 +575,6 @@ function unfollowObject() {
 
 
 
-var addingObject = false
 get("btnAddObject").addEventListener("click", function (event) {
     addingObject = true
     updateAddObjectBtn()
@@ -522,22 +588,8 @@ updateAddObjectBtn()
 
 
 
-var gridSize = 100
-var gridRadius = 10
+// ======== DRAWING PART ========
 
-
-
-var scaleStack = []
-
-function scale(x) {
-    scaleStack.push(x)
-    c.scale(x, x)
-}
-
-function unscale() {
-    x = scaleStack.pop()
-    c.scale(1/x, 1/x)
-}
 
 function drawSquare(x = 0, y = 0, size = 1) {
     c.beginPath();
@@ -572,22 +624,21 @@ function drawCircle(x = 0, y = 0, radius = 1, hasBorder = true, color = "rgba(0,
 }
 
 function drawVector(x, y, magnitude, angle, color = "rgb(0, 50, 250, 0)") {
-    var size = 1
-    var length = magnitude * 1e3/size
-    c.lineWidth = 0.11
-    c.strokeStyle = color
-
     
+    var length = magnitude * gridSize/vectorSize * vectorLength
+    c.strokeStyle = color
+    
+    c.lineWidth = 0.11 // Needs to be fixed at 0.11 to completely fill the arrowhead
     c.translate(x, y)
-    c.scale(size, size)
+    c.scale(vectorSize, vectorSize)
     c.rotate(angle)
         c.beginPath()
         c.translate(length, 0)
-            c.moveTo(0.2, 0)
-            c.lineTo(0.0, 0.075)
-            c.lineTo(0.0, -0.075)
-            c.lineTo(0.2, 0)
-            c.lineTo(0.0, 0.075)
+            c.moveTo(0.2, 0.0)
+            c.lineTo(c.lineWidth/2-0.01, 0.06)
+            c.lineTo(c.lineWidth/2-0.01, -0.06)
+            c.lineTo(0.2, 0.0)
+            c.lineTo(c.lineWidth/2-0.01, 0.06)
         c.translate(-length, 0)
         c.stroke()
 
@@ -596,11 +647,8 @@ function drawVector(x, y, magnitude, angle, color = "rgb(0, 50, 250, 0)") {
         c.lineTo(length, 0)
     c.rotate(-angle)
     c.stroke()
-    c.scale(1/size, 1/size)
+    c.scale(1/vectorSize, 1/vectorSize)
     c.translate(-x, -y)
-    
-    
-
 }
 
 function drawSelectedObject(physicsObject) {
@@ -610,36 +658,37 @@ function drawSelectedObject(physicsObject) {
     var r = physicsObject.radius
 
     drawCircle(
-        physicsObject.trail[0].x,
-        physicsObject.trail[0].y,
+        physicsObject.position.x,
+        physicsObject.position.y,
         r*1.4*GUIScale,
         false,
-        "rgb(0, 150, 250, 0.3)",// + (0.3 + 0.2 * Math.sin(frame / (30 * simulationSpeed))),
+        "rgb(0, 150, 250, 0.3)",// + (0.3 + 0.2 * Math.sin(time)),
         false
     )
 
-    c.translate(physicsObject.trail[0].x, physicsObject.trail[0].y)
+    c.translate(physicsObject.position.x, physicsObject.position.y)
     for (let i = 0; i < 4; i++) {
         c.beginPath()
         c.moveTo(0, r + d)
-        c.rotate(i*tau/4 + frame / (-1e3 * simulationSpeed))
+        c.rotate(i*tau/4-time)
         c.lineTo(d/2, r + 2*d)
         c.lineTo(-d/2, r + 2*d)
         c.lineTo(0, r + d)
         c.lineTo(d/2, r + 2*d)
         c.fillStyle = "rgb(255, 255, 255, 0.5)"
         c.fill()
-        c.rotate(-i*tau/4 - frame / (-1e3 * simulationSpeed))
+        c.rotate(-i*tau/4+time)
     }
-    c.translate(-physicsObject.trail[0].x, -physicsObject.trail[0].y)
+    c.translate(-physicsObject.position.x, -physicsObject.position.y)
 }
 
 function drawGridlines() {
     
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
         
         // Only draw gridlines close to the view scale
-        scale(Math.pow(10, i), Math.pow(10, i))
+        c.save()
+        c.scale(Math.pow(10, i), Math.pow(10, i))
         if (false) {
             return
         }
@@ -658,49 +707,55 @@ function drawGridlines() {
         }
 
         c.strokeStyle = "rgb(250,250,250, 0.2)"
-        c.lineWidth = 3/gridSize
+        c.lineWidth = 3/gridSize* 1/Math.pow(10, i) * 1/(Math.pow(view.scale, 0.8))
         c.stroke();
 
-        unscale()
+        c.restore()
     }
     
     
     
     // Thicker axes
     c.beginPath()
+    c.strokeStyle = "rgb(050,250,200, 0.4)"
     c.moveTo(0, -1000)
     c.lineTo(0, 1000)
     c.moveTo(-1000, 0)
     c.lineTo(1000, 0)
-    c.lineWidth = 10/gridSize
+    c.lineWidth = 3/gridSize * 1/view.scale
     c.stroke();
 }
 
-function drawOrbit(physicsObject) {
-    
-}
 
 function draw() {
-    
     drawBackground()
-    scale(view.scale)
+    c.save()
+    c.scale(view.scale, view.scale)
     c.translate(view.position.x, -view.position.y)
-    scale(gridSize)
+    c.scale(gridSize, gridSize)
     c.translate(-cameraPosition.x, -cameraPosition.y)
 
 
-    // ------- Draw call -------
+    // ------- Draw stuff here -------
+
     if (gridLinesEnabled) { drawGridlines() }
 
-    // Force vectors
+    // Drawing all objects, with trails below all objects, and force vectors on top
     physicsObjects.forEach(physicsObject => {
-        physicsObject.draw()
-
-        if (forceVectorsEnabled) { physicsObject.drawForceVector() }
+        physicsObject.drawTrail()
     });
-
-    if (addingObject && mouseDown) {
+    physicsObjects.forEach(physicsObject => {
+        physicsObject.drawBody()
+    });
+    if (forceVectorsEnabled) {
+        physicsObjects.forEach(physicsObject => {
+            physicsObject.drawForceVector()
+        });
+    }
         
+
+    // Adding object
+    if (addingObject && mouseDown) {
         var { Cx, Cy } = screenToCoordinates(mouseDownPos.x, mouseDownPos.y)
         var x1 = Cx
         var y1 = Cy
@@ -722,12 +777,16 @@ function draw() {
     }
 
     drawCursor()
-    
-    c.translate(cameraPosition.x, cameraPosition.y)
-    unscale()
-    c.translate(-view.position.x, view.position.y)
-    unscale()
+
+    c.restore()
 }
+
+
+
+
+
+
+// ======== PROGRAM LOGIC PART ========
 
 
 function screenToCoordinates(x, y) {
@@ -756,9 +815,6 @@ function click(x, y) {
         return
     }
 
-    console.log(closestDistance, interactionRadius, getObjectByName(closestObject).radius, interactionRadius + getObjectByName(closestObject).radius);
-    console.log(closestDistance - (interactionRadius/view.scale + getObjectByName(closestObject).radius))
-    
     if (closestDistance > (interactionRadius/view.scale + getObjectByName(closestObject).radius)) {
         unselectObject()
     } else {
@@ -771,7 +827,7 @@ function drawCursor(active = false) {
     
     var active = (closestDistance < interactionRadius/view.scale + getObjectByName(closestObject).radius)
     drawCircle(Cx, Cy, interactionRadius / view.scale, false,
-        "rgb(50, 150, 250, " + ((active ? 0.6 : 0.3) + (addingObject ? 0.2 * Math.sin(frame / (30 * simulationSpeed)) : 0))
+        "rgb(50, 150, 250, " + ((active ? 0.6 : 0.3) + (addingObject ? 0.2 * Math.sin(10*time) : 0))
     )
 }
 
@@ -811,18 +867,15 @@ function getObjectByName(name) {
 }
 
 
+function lookAt(physicsObjectName) {
+    var physicsObject = getObjectByName(physicsObjectName)
+    cameraPosition.x = physicsObject.position.x
+    cameraPosition.y = physicsObject.position.y
+}
 
 function update() {
     if (simulationPaused) { return }
-
-    if (followingObject != "none") {
-        
-        var physicsObject = getObjectByName(followingObject)
-        cameraPosition.x = physicsObject.position.x
-        cameraPosition.y = physicsObject.position.y
-    }   
-        
-
+    
     for (let i = 0; i < simulationSpeed; i++) {    
         frame++
         physicsObjects.forEach(physicsObject => {
@@ -830,22 +883,30 @@ function update() {
         });
     }
 
+    if (followingObject != "none") {
+        lookAt(followingObject)
+    }
+    if (selectedObject != "none") {
+        var objectInfo = getObjectByName(selectedObject)
+        get("selectionMass").innerHTML = objectInfo.mass + " m𓇳"
+        get("selectionSpeed").innerHTML = (getMagnitude(objectInfo.speed.x, objectInfo.speed.y)*FPS).toFixed(3) + " u/s"
+    }
+        
+
+
 }
 
 
 
-var frame = 0
-var time = 0
+
 
 function animate() {
-    
     update()
     draw()
     
     frame++
-    time += FPS
+    time += 1/FPS
     requestAnimationFrame(animate)
 }
 
 animate()
-

@@ -7,8 +7,8 @@
 		<link rel="stylesheet" type="text/css" href="./style/style.css">
 	</head>
 
+	
 	<body>
-
         <div id="dashboard">
             <div class="flex-container">
                 <button id="btnHalfSpeed">0.5x</button>
@@ -27,8 +27,11 @@
             <br>
             <div class="info">
                 Selected object: <span id="selectedObject">none</span>
-            </div>
-            <div class="flex-container">
+                <br>
+                <div id="selectionInfo">
+                    Mass: <span id="selectionMass"></span><br>
+                    Speed: <span id="selectionSpeed"></span><br>
+                </div>
                 <button id="btnFollow">Follow</button></td>
             </div>
             <br>
@@ -36,6 +39,6 @@
         </div>
         
         <canvas id="canvas"></canvas>
-        <script src="./script/script.js"></script>
+        <script src="script/script.js"></script>
 	</body>
 </html>
