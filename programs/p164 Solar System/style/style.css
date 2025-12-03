@@ -5,6 +5,7 @@ html, body {
     margin: 0px;
     overflow: hidden;
     position: absolute;
+    font-family: 'Gill Sans MT', Calibri;
 }
 
 #canvas {
@@ -12,27 +13,15 @@ html, body {
     position: absolute;
 }
 
-#inspector {
-    background-color: rgb(255, 255, 255);
-    color: black;
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-    padding: 12px;
-    padding-left: 20px;
-    display: block;
-    position: absolute;
-    margin-left: 0px;
-    width: 25vw;
-    height: 100vh;
-
-    z-index: 1;
-}
-
 button {
     height: 32px;
     font-size: 20px;
     min-width: 50px;
     margin: 5px 2px;
+    border-radius: 2px;
+    border: 1px solid white;
+
+    font-family: 'Gill Sans MT', Calibri;
 }
 
 button:hover {
@@ -65,7 +54,6 @@ button:active {
 .info {
     font-size: 20px;
     color: white;
-    font-family: 'Gill Sans MT', Calibri;
 }
 
 #btnFollow, #selectionInfo {

@@ -1,8 +1,10 @@
 
-// Use [ctrl] + [F] "===" to navigate to different parts
+// Use [ctrl] + [F] "=== " to navigate to different parts
 
 // Physics part:    Math and physics architecture, and planet initialization
 // UI part:         Interaction handling
+// Draw part:       Defining shapes and drawing each frame
+// Main part:       Main program functionality handling
 
 
 const FPS = 144
@@ -21,7 +23,6 @@ const maxForceVectorLength = 1.0
 const tau = 2 * Math.PI;
 const G = 1 / 1e6
 const c = get("canvas").getContext("2d");
-
 
 
 var Width = window.innerWidth;
@@ -74,6 +75,13 @@ var objectsAdded = 0
 var addingObject = false
 var gridSize = 100
 var gridRadius = 10
+
+text = {
+    follow: "<u>F</u>ollow",
+    unfollow: "Un<u>F</u>ollow",
+    forceVectors: "Force <u>V</u>ectors: ",
+    gridlines: "<u>G</u>ridlines: ",
+}
 
 // ======== PHYSICS PART ========
 
@@ -408,7 +416,7 @@ function drawBackground() {
 }
 
 
-get("canvas").addEventListener("wheel", function (event) {
+get("canvas").addEventListener("wheel", (event) => {
 
     if (event.deltaY < 0) {
         // Zooming in
@@ -431,60 +439,68 @@ get("canvas").addEventListener("wheel", function (event) {
 })
 
 
-// Simulation speed buttons
-get("btnHalfSpeed").addEventListener("mouseup", function(event) {
-    if (!simulationPaused) { simulationSpeed *= 0.5 }
-    simulationSpeed = Math.max(1, simulationSpeed) // Lower limit
+
+// UI functionality, with some extra parameterless functions to be used in the hotkey setup
+function halfSimSpeed() {   scaleSimSpeed(0.5) }
+function doubleSimSpeed() { scaleSimSpeed(2) }
+
+function scaleSimSpeed(multiplier) {
+    var newSimSpeed = multiplier * simulationSpeed
+    simulationSpeed = Math.min(Math.max(1, newSimSpeed), 1024) // Clamping
     updateBtnText()
-})
-get("btnDoubleSpeed").addEventListener("mouseup", function(event) {
-    if (!simulationPaused) { simulationSpeed *= 2 }
-    updateBtnText()
-})
-get("btnSimSpeed").addEventListener("click", function(event) {
+}
+
+function toggleSimulationPaused() {
     simulationPaused = !simulationPaused
     updateBtnText()
-})
+}
 
+function toggleForceVectors() {
+    forceVectorsEnabled = !forceVectorsEnabled
+    updateVectorBtnText()
+}
+
+function toggleGridlines() {
+    gridLinesEnabled = !gridLinesEnabled
+    updateGridlinesBtnText()
+}
+
+// Simulation speed buttons, interfacing with the HTML
+get("btnHalfSpeed").addEventListener("mouseup", () => { halfSimSpeed() })
+get("btnDoubleSpeed").addEventListener("mouseup", () => { doubleSimSpeed() })
+get("btnSimSpeed").addEventListener("click", () => { toggleSimulationPaused() })
+get("btnToggleForceVectors").addEventListener("click", () => { toggleForceVectors() })
+get("btnToggleGridlines").addEventListener("click", () => {toggleGridlines()})
+
+
+// UI update functions
+updateBtnText()
 function updateBtnText() {
-    var btnText = "Sim speed: " + simulationSpeed + "x"
-    if (simulationPaused) {btnText = "Simulation paused"}
+    var btnText
+    if (simulationPaused) {
+        btnText = "Sim paused (" + simulationSpeed + "x)"
+    } else {
+        btnText = "Sim speed: " + simulationSpeed + "x"
+    }
     get("btnSimSpeed").innerHTML = btnText
     get("btnSimSpeed").style.backgroundColor = simulationPaused ? "rgb(250, 200, 200)" : "rgb(200, 250, 200)"
 }
-updateBtnText()
 
-
-
-// Force vector toggle controls
-get("btnToggleForceVectors").addEventListener("click", function(event) {
-    forceVectorsEnabled = !forceVectorsEnabled
-    updateVectorBtnText()
-})
-
+updateVectorBtnText()
 function updateVectorBtnText() {
-    get("btnToggleForceVectors").innerHTML = "Force vectors: " + (forceVectorsEnabled ? "On" : "Off")
+    get("btnToggleForceVectors").innerHTML = text.forceVectors + (forceVectorsEnabled ? "On" : "Off")
     get("btnToggleForceVectors").style.backgroundColor = !forceVectorsEnabled ? "rgb(250, 200, 200)" : "rgb(200, 250, 200)"
 }
-updateVectorBtnText()
 
-
-
-// Gridlines toggle
-get("btnToggleGridlines").addEventListener("click", function(event) {
-    gridLinesEnabled = !gridLinesEnabled
-    updateGridlinesBtnText()
-})
-
+updateGridlinesBtnText()
 function updateGridlinesBtnText() {
-    get("btnToggleGridlines").innerHTML = "Gridlines: " + (gridLinesEnabled ? "On" : "Off")
+    get("btnToggleGridlines").innerHTML = text.gridlines + (gridLinesEnabled ? "On" : "Off")
     get("btnToggleGridlines").style.backgroundColor = !gridLinesEnabled ? "rgb(250, 200, 200)" : "rgb(200, 250, 200)"
 }
-updateGridlinesBtnText()
 
 
 
-get("canvas").addEventListener("mousedown", function(event) {
+get("canvas").addEventListener("mousedown", (event) => {
     mouseDown = true
     
     mouseDownPos = {
@@ -494,11 +510,11 @@ get("canvas").addEventListener("mousedown", function(event) {
     mousemove(event)
     click(event.clientX, event.clientY)
 })
-get("canvas").addEventListener("mouseup", function(event) {
+get("canvas").addEventListener("mouseup", (event) => {
     mouseDown = false
     release(event.clientX, event.clientY)
 })
-get("canvas").addEventListener("mousemove", function(event) {
+get("canvas").addEventListener("mousemove", (event) => {
     mousemove(event)
 })
 
@@ -521,7 +537,7 @@ function mousemove(event) {
 
 
 
-get("btnFollow").addEventListener("click", function (event) {
+get("btnFollow").addEventListener("click", () => {
     if (selectedObject != "none" && (selectedObject != followingObject)) {
         // Starting to follow
         view.position = { x: 0, y: 0 } // Resetting pan
@@ -543,25 +559,32 @@ function selectObject(physicsObject) {
     get("selectionInfo").style.display = "block"
 
     if (selectedObject != "none" && (selectedObject != followingObject)) {
-        get("btnFollow").innerHTML = "Follow"
+        get("btnFollow").innerHTML = text.follow
     }
 }
 
 function unselectObject() {
     get("selectedObject").innerHTML = "none"
+
     if (followingObject == "none") {
         get("btnFollow").style.display = "none"
     } else {
-        get("btnFollow").innerHTML = "Unfollow"
+        get("btnFollow").innerHTML = text.unfollow
     }
     get("selectionInfo").style.display = "none"
     selectedObject = "none"
 }
 
+
+function toggleFollowSelection() {
+    if (get("btnFollow").style.display == "none") { return }
+    get("btnFollow").click()
+}
+
 function followObject(physicsObject) {
     followingObject = physicsObject
     lookAt(followingObject)
-    get("btnFollow").innerHTML = "Unfollow"
+    get("btnFollow").innerHTML = text.unfollow
 }
 
 function unfollowObject() {
@@ -570,12 +593,12 @@ function unfollowObject() {
     if (selectedObject == "none") {
         get("btnFollow").style.display = "none"
     }
-    get("btnFollow").innerHTML = "Follow"
+    get("btnFollow").innerHTML = text.follow
 }
 
 
 
-get("btnAddObject").addEventListener("click", function (event) {
+get("btnAddObject").addEventListener("click", () => {
     addingObject = true
     updateAddObjectBtn()
 })
@@ -587,6 +610,40 @@ updateAddObjectBtn()
 
 
 
+
+// Keyboard manager
+
+class Hotkey { // Also doubles as a vector
+    constructor(key, action) {
+        this.key = key
+        this.doAction = action
+    }
+
+    doAction() {
+        
+    }
+}
+
+window.addEventListener("keydown", (event) => {
+    keyMap.forEach(hotkey => {
+        if (event.key.toUpperCase() == hotkey.key.toUpperCase())
+        hotkey.doAction()
+    });
+})
+
+function logK() {
+    console.log("K!")
+}
+
+const keyMap = [
+    new Hotkey("K", logK),
+    new Hotkey(" ", toggleSimulationPaused),
+    new Hotkey("V", toggleForceVectors),
+    new Hotkey("G", toggleGridlines),
+    new Hotkey("F", toggleFollowSelection),
+    new Hotkey("ArrowRight", doubleSimSpeed),
+    new Hotkey("ArrowLeft", halfSimSpeed),
+]
 
 // ======== DRAWING PART ========
 
@@ -786,7 +843,7 @@ function draw() {
 
 
 
-// ======== PROGRAM LOGIC PART ========
+// ======== MAIN PROGRAM LOGIC PART ========
 
 
 function screenToCoordinates(x, y) {
